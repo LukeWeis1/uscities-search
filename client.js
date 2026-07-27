@@ -50,10 +50,44 @@ async function search() {
 
 var responsesElm = document.getElementById('responses');
 function displaySearch(data) {
-  if(!responsesElm) {
-    console.log('Error in getting "responses"');
-    return;
-  }
+    if (!responsesElm) {
+        console.log('Error in getting "responses"');
+        return;
+    }
 
-  responsesElm.textContent = data.length === 0 ? 'No cities found' : JSON.stringify(data, null, 2);
+    if (data.length === 0) {
+        responsesElm.textContent = 'No cities found';
+    } else {
+        responsesElm.innerHTML = json2htmllist(data);
+    }
+}
+
+var debounceTimer = null;
+searchInput.addEventListener('keyup', function (event) {
+    if (event.key === 'Enter') {
+        clearTimeout(debounceTimer);
+        search();
+        searchInput.value = '';
+        return;
+    }
+    clearTimeout(debounceTimer);
+    var query = searchInput.value.trim();
+    if (query.length < 2) return;
+    debounceTimer = setTimeout(search, 300);
+});
+
+function json2htmllist(data) {
+    if (!Array.isArray(data) || data.length === 0) return "No cities found";
+    var items = data.map(function (c) {
+        return '<li class="city-card"><strong>' + data_sanitize(c.city) + '</strong>, ' +
+            data_sanitize(c.state_name) + ' <span class="zips">' + data_sanitize(c.zips) + '</span></li>';
+    }).join('');
+    return '<ul class="city-list list-unstyled">' + items + '</ul>';
+}
+
+function data_sanitize(str) {
+    if (str === null || str === undefined) return '';
+    const tempElm = document.createElement('div');
+    tempElm.textContent = String(str);
+    return tempElm.innerHTML;
 }
